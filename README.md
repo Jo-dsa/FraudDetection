@@ -29,3 +29,10 @@ Train <br />
 ```sh
 python3 run.py
 ```
+## Current scores
+Under-sampling <br />
+
+            model_name       AUC
+0  Logistic_regression  0.931963
+1          Naive_Bayes  0.914658
+2              XGBoost  0.928630
