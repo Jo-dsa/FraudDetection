@@ -37,3 +37,11 @@ Under-sampling <br />
 | Logistic_regression | 0.931963 |
 | Naive_Bayes         | 0.914658 |
 | XGBoost             | 0.928630 |
+
+Over-sampling <br />
+
+| model_name          | AUC      |
+|---------------------|----------|
+| Logistic_regression | 0.948677 |
+| Naive_Bayes         | 0.914143 |
+| XGBoost             | 0.978393 |
