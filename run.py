@@ -11,7 +11,7 @@ if __name__ == '__main__':
 		Main file to train and/or predict
 
 	"""
-	# Parametres
+	# Parameters
 	RANDOM_STATE = 42
 	METHOD = 'undersampling'
 	FILE = './data/creditcard.csv'
