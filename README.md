@@ -1,5 +1,5 @@
 # Credit Card Fraud detection
-In this project, we implement supervised learning techniques to detect fraud in the creditcard dataset.
+In this project, we implement supervised learning techniques to detect fraud in the creditcard dataset.<br/>
 Over-sampling and under-sampling techniques are used.
 
 ## Implementation
