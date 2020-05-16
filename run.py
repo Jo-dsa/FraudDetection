@@ -8,9 +8,9 @@ from xgboost import XGBClassifier
 
 if __name__ == '__main__':
 	"""
-		Main file to train and/or predict
-
+	Main file to train and/or predict
 	"""
+	
 	# Parameters
 	RANDOM_STATE = 42
 	METHOD = 'undersampling'
@@ -24,7 +24,6 @@ if __name__ == '__main__':
 	# Get sample using oversampling or undersampling
 	Xtrain, Xtest, ytrain, ytest =  Processing.get_sample(method=METHOD, t_size=.3, random_state=RANDOM_STATE )
 
-
 	# Train & save models	
 	my_models = {
 		'Logistic_regression':LogisticRegression(random_state = RANDOM_STATE),
@@ -36,7 +35,6 @@ if __name__ == '__main__':
 	# Get performance
 	s = ensemble_learners.scores(Xtest, ytest)
 	print(pd.DataFrame({'model_name':s[0],'AUC':s[1]}))
-
 
 	# predict
 	yhat = Framework.predict(Xtest, "./saved_models/Logistic_regression.pkl")
