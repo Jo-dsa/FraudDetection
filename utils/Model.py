@@ -8,12 +8,11 @@ class Framework():
 		"""
 		Initialize the model framework
 		args:
-			models: Dictionary of callable machine learning models
-					ex: dico = {
-							'model_name':model_1(),
-							'model_name':model_2(),
-							...
-						}
+		   	models: Ensemble of sklearn models
+					ex: models = {
+							'model_name':model1(),
+							'model_name':model2(),
+						     }
 		"""
 		self.models = models
 		self.fitted_models = {}
@@ -90,8 +89,6 @@ class Framework():
 		table = [[],[]]
 		roc_tmp = {}
 
-		
-
 		#Compute AUC score an plot ROC Curve
 		if models is not None:
 
@@ -121,7 +118,7 @@ class Framework():
 
 	def _plot_roc(self, roc_tmp):
 		"""
-		Internal function use to plot ROC Curve
+		Plots ROC Curves
 		
 		args:
 			roc_tmp: tuple of roc informations
