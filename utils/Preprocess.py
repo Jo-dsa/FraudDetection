@@ -7,120 +7,128 @@ from imblearn.under_sampling import RandomUnderSampler
 
 
 class Preprocessing(object):
-	"""docstring for Preprocess"""
-	def __init__(self):
-		self.data = None
-		self.random_state = None
+    """
+    Implements processing step for data
+    """
 
-	def fit(self, X, columns_name=None):
-		"""
-		Apply transformations on a DataFrame
+    def __init__(self):
+        self.data = None
+        self.random_state = None
 
-		args:
-			X: pandas DataFrame
-			columns_name: list of columns names to apply normalization
+    def fit(self, X, columns_name=None):
+        """
+	Transforms the provided data
 
-		outputs:
-			self
-		"""
+	args:
+	    X (DataFrame): Features data
+	    columns_name (list): List of column names on which to apply normalization
+	outputs:
+	    self
+	"""
 
-		self.data = X
-		self._normalize(columns_name)
+        self.data = X
+        self._normalize(columns_name)
 
-		return self
+        return self
 
-	def _normalize(self, columns_name):
-		"""
-		Apply a Z normalization on selected columns
-		z = (x - mu)/sigma
+    def _normalize(self, columns_name):
+        """
+	Applies a Z normalization on selected columns
+	z = (x - mu)/sigma
 
-		args:
-			columns_name: list of column names to apply mormalization
+	args:
+	    columns_name (list): List of column names on which to apply normalization
 
-		"""
+	"""
+        if not all(name in self.data.columns.values for name in columns_name):
+            print(f"Error: One of '{columns_name}' not in DataFrame columns")
+        else:
+            for name in columns_name:
+                sc = StandardScaler()
+                self.data[name] = sc.fit_transform(
+                    self.data[name].values.reshape(-1, 1)
+                ).reshape(-1)
 
-		if not all(e in self.data.columns.values for e in columns_name):
-			print(f"Error: One of '{columns_name}' not in DataFrame columns")
-		else:
-			for e in columns_name:
-				sc = StandardScaler()
-				self.data[e] = sc.fit_transform(self.data[e].values.reshape(-1, 1)).reshape(-1)
-		
-	def _oversampling(self):
-		"""
-		Apply OverSampling using SMOTE on self.data
+    def _oversampling(self):
+        """
+	Applies OverSampling using SMOTE on self.data
 
-		outputs:
-			x: resampled data
-			y: resampled target
-		"""
-		x_tmp = self.data.drop('Class', axis=1).values
-		y_tmp = self.data.Class.values
-		
-		x, y = SMOTE(sampling_strategy='minority', random_state=self.random_state).fit_sample(x_tmp, y_tmp)
+	outputs:
+	    x (2darray): resampled features
+	    y (1darray): resampled targets
+	"""
+        x_tmp = self.data.drop("Class", axis=1).values
+        y_tmp = self.data.Class.values
+
+        x, y = SMOTE(
+            sampling_strategy="minority", random_state=self.random_state
+        ).fit_sample(x_tmp, y_tmp)
+
+        return x, y
+
+    def _undersampling(self):
+        """
+	Applies undersampling using RandomUnderSampler on self.data
+
+	outputs:
+	    x (2darray): resampled features
+	    y (1darray): resampled targets
+	"""
+        x_tmp = self.data.drop("Class", axis=1).values
+        y_tmp = self.data.Class.values
+
+        x, y = RandomUnderSampler(random_state=self.random_state).fit_sample(
+            x_tmp, y_tmp
+        )
+
+        return x, y
+
+    def _train_test(self, x, y, t_size):
+        """
+	Split features and targets into random train and test subsets
+
+	args:
+	    x (2darray): features data to split
+	    y (1darray): target labels to split
+	    t_size (float): proportion of test sample. 0 < t_size < 1
+	outputs:
+	    tuple that contains train/test split
+	"""
+
+        return train_test_split(x, y, test_size=t_size, random_state=self.random_state)
+
+    def get_sample(self, method="overampling", t_size=0.3, random_state=42):
+        """
+	Returns train and test subsets given the sampling method
+
+	args:
+	    method (String): Sampling method. 'oversampling' || 'undersampling'
+	    t_size (Float): Proportion of test sample. 0 < t_size < 1
+	    random_state (int): random state number. ``Fix random behavior``
+
+	return:
+	    Xtrain (2darray): features sample for train
+	    Xtest (1darray): features sample for test
+	    ytrain (2darray): target sample for train
+	    ytest (1darray): target sample for test
+	"""
 	
-		return x, y
+        self.random_state = random_state
+        x, y = None, None
+        Xtrain, Xtest, ytrain, ytest = None, None, None, None
 
+        if method not in ["oversampling", "undersampling"]:
+            print(
+                f"Error: Unkown method '{method}', available are ['oversampling', 'undersampling']"
+            )
+        else:
+            if method == "oversampling":
+                print("-" * 4, "OVER-SAMPLING", "-" * 4)
+                x, y = self._oversampling()
+            else:
+                print("-" * 4, "UNDER-SAMPLING", "-" * 4)
+                x, y = self._undersampling()
 
-	def _undersampling(self):
-		"""
-		Apply undersampling using RandomUnderSampler on self.data
+            Xtrain, Xtest, ytrain, ytest = self._train_test(x, y, t_size)
 
-		outputs:
-			x: resampled data
-			y: resampled target
-		"""
-		x_tmp = self.data.drop('Class', axis=1).values
-		y_tmp = self.data.Class.values
-
-		x, y = RandomUnderSampler(random_state=self.random_state).fit_sample(x_tmp, y_tmp)
-		
-		return x, y
-
-	def _train_test(self, x, y, t_size):
-		"""
-		Split arrays or matrices into random train and test subsets
-
-		args:
-			x: matrix to split
-			y: target list to split
-			t_size: proportion of test sample (float) between 0 and 1
-		outputs:
-			tuple containing train-test split of inputs.
-		"""
-		
-		return train_test_split(x, y, test_size=t_size, random_state=self.random_state)
-
-	def get_sample(self, method='overampling', t_size=.3, random_state=42 ):
-		"""
-		This function return train and test subsets given the sampling method
-
-		args:
-			method: sampling method 'oversampling' or 'undersampling'
-			t_size: proportion of test sample (float) between 0 and 1
-			random_state: random state number, helps to get a consistent experimentation
-
-		return:
-			Xtrain: train sample (matrix)			
-			Xtest: test sample (matrix)
-			ytrain: test sample (list)
-			ytest: target sample (list)
-		"""
-		self.random_state = random_state
-		x, y = None, None
-		Xtrain, Xtest, ytrain, ytest = None, None, None, None
-
-		if method not in ['oversampling','undersampling']:
-			print(f"Error: Unkown method '{method}', available are ['oversampling', 'undersampling']")
-		else:	
-			if method == 'oversampling':
-				print('-'*4,'OVER-SAMPLING','-'*4)
-				x, y = self._oversampling()
-			else:
-				print('-'*4,'UNDER-SAMPLING','-'*4)
-				x, y = self._undersampling()
-
-			Xtrain, Xtest, ytrain, ytest = self._train_test(x, y, t_size)
-
-		return Xtrain, Xtest, ytrain, ytest
-
+        return Xtrain, Xtest, ytrain, ytest
