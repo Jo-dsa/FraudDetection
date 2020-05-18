@@ -21,12 +21,12 @@ Operating System : MacOS Catalina 10.15.2
 
 
 ## Getting Started
-Install dependencies <br />
+Install dependencies: <br />
 ```sh
 pip install -r requirements.txt
 ```
 
-Train <br />
+Run: <br />
 ```sh
 python3 run.py
 ```
