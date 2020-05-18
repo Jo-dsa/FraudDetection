@@ -1,139 +1,145 @@
 import pickle
-from sklearn.metrics import roc_auc_score, roc_curve
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score, roc_curve
 
-class Framework():
 
-	def __init__(self, models=None):
-		"""
-		Initialize the model framework
-		args:
-		   	models: Ensemble of sklearn models
-					ex: models = {
-							'model_name':model1(),
-							'model_name':model2(),
-						     }
-		"""
-		self.models = models
-		self.fitted_models = {}
+class Framework:
+    def __init__(self, models=None):
+        """
+        Initializes model framework
+        args:
+            models (dict): Sklearn models
+                            models = {
+                                'model_name':model1(),
+                                'model_name':model2(),
+                            }
+        """
+        self.models = models
+        self.fitted_models = {}
 
-	def fit(self, X, y, saved_dir='./saved_dir'):
-		"""
-		Train all models in self.models and save them in './saved_models'
+    def fit(self, X, y, save_dir="./pretrained"):
+        """
+        Trains and registers the the models in < save_dir >
 
-		args:
-			X: features data (matrix)
-			y: target data (list)
-			saved_dir: directory where models should be saved
-		outputs:
-			return self instance. Fitted models are in 'self.fitted_models'
-		"""
-		print('\n','-'*4,'Fit','-'*4)
+        args:
+            X (2darray): Features data to be used for training
+            y (list): Target labels
+            save_dir (String): Output directory for pretrained models
+        outputs:
+            self ``self.fitted_models contains the pretrained models``
+        """
+        print("\n", "-" * 4, "Fit", "-" * 4)
 
-		for key in self.models.keys():
-			self.fitted_models[key] = self.models[key].fit(X, y)
-			print(f"{key}: fitted")
+        for key in self.models.keys():
+            self.fitted_models[key] = self.models[key].fit(X, y)
+            print(f"{key}: fitted")
 
-		self._save(dir=saved_dir)
+        self._save(save_dir=save_dir)
 
-		return self
+        return self
 
-	@staticmethod
-	def predict(X=None, path=None):
-		"""
-		Load a fitted model and make a prediction
+    @staticmethod
+    def predict(X=None, model_path=None):
+        """
+        Load a fitted model and make a prediction
 
-		args:
-			X: features matrix to predict
-			path: path to the desire file model (string)
-		outputs:
-			list of prediction
-		"""
+        args:
+            X (2darray): Features data to be used for prediction
+            model_path (String): Relative path of the model to be used
+        outputs:
+            res (list): Predicted labels
+        """
+        res = None
 
-		with open(path, 'rb') as f:
-			return pickle.load(f).predict(X)
-		
+        with open(path, "rb") as f:
+            res = pickle.load(f).predict(X)
 
-	def _save(self, dir):
-		"""
-		Save all the models in 'dir' directory
+        return res
 
-		args:
-			dir: directory to save models (string)
+    def _save(self, save_dir):
+        """
+        Save pretrained models in < save_dir >
 
-		"""
-		print('\n','-'*4,'Save','-'*4)
+        args:
+            save_dir (String): output directory for pretrained models
 
-		for name, model in self.fitted_models.items():
-			with open(dir+'/'+name+'.pkl', 'wb') as f:
-				pickle.dump(model, f)
+        """
+        print("\n", "-" * 4, "Save", "-" * 4)
 
-			print(f"Model '{name}.pkl' saved in '{dir}'")
-		
+        for name, model in self.fitted_models.items():
+            with open(save_dir + "/" + name + ".pkl", "wb") as f:
+                pickle.dump(model, f)
 
-	def scores(self, X=None, y=None, models=None):
-		"""
-		Computes AUC metric using ROC CURVE
+            print(f"Model '{name}.pkl' saved in '{save_dir}'")
 
-		args:
-			X: features matrix to predict
-			y: real labels (array)
-			models: path to pretrained models (array).
-					If not None use pretrained models for path 
-					instead of fitted model in self Object
-		outputs:
-			table: AUC score for each model (ndarray)
-		"""
-		print('\n','-'*4,'Score','-'*4)
+    def get_scores(self, X, y, models=None):
+        """
+        Computes AUC metric using ROC CURVE
 
-		table = [[],[]]
-		roc_tmp = {}
+        args:
+            X (2darray): Features data to be used for prediction
+            y (list): Target labels
+            models (list): optional list of pretrained model's path.
+                           ``If 'None' use the current fitted models, else
+                           use the provided models``
+        outputs:
+            scores (ndarray): Contains AUC scores for each model
+        """
+        print("\n", "-" * 4, "Score", "-" * 4)
 
-		#Compute AUC score an plot ROC Curve
-		if models is not None:
+        scores = [[], []]
+        roc = {}
 
-			for name in models:				
-				with open(name, 'rb') as f:
-					yhat = pickle.load(f).predict(X)
+        # Compute AUC score an plot ROC Curve
+        if models is not None:
 
-					table[0].append(name)
-					table[1].append(roc_auc_score(y, yhat))
+            for name in models:
+                with open(name, "rb") as f:
+                    yhat = pickle.load(f).predict(X)
 
-					fpr, tpr, _ = roc_curve(y, yhat)
-					roc_tmp[name.split('/')[-1]] = (fpr, tpr, round(roc_auc_score(y, yhat), 3))
-		else:
-			for name, model in self.fitted_models.items():
-				yhat = model.predict(X)
+                    # computes the auc score
+                    scores[0].append(name)
+                    scores[1].append(roc_auc_score(y, yhat))
 
-				table[0].append(name)
-				table[1].append(roc_auc_score(y, yhat))
+                    # computes the roc curves
+                    fpr, tpr, _ = roc_curve(y, yhat)
+                    roc[name.split("/")[-1]] = (
+                        fpr,
+                        tpr,
+                        round(roc_auc_score(y, yhat), 3),
+                    )
+        else:
+            for name, model in self.fitted_models.items():
+                yhat = model.predict(X)
 
-				fpr, tpr, _ = roc_curve(y, yhat)
-				roc_tmp[name] = (fpr, tpr, round(roc_auc_score(y, yhat),3))
+                scores[0].append(name)
+                scores[1].append(roc_auc_score(y, yhat))
 
-		#Plot Roc Curve
-		self._plot_roc(roc_tmp)
+                fpr, tpr, _ = roc_curve(y, yhat)
+                roc[name] = (fpr, tpr, round(roc_auc_score(y, yhat), 3))
 
-		return table
+        # Plot Roc Curve
+        self._plot_roc(roc)
 
-	def _plot_roc(self, roc_tmp):
-		"""
-		Plots ROC Curves
-		
-		args:
-			roc_tmp: tuple of roc informations
+        return scores
 
-		"""
+    def _plot_roc(self, roc):
+        """
+        Plots ROC Curves
+        
+        args:
+            roc (tuple) : roc's informations
 
-		for key, value in roc_tmp.items():
-			plt.plot(value[0], value[1], label=f"{key} - AUC({value[2]})")
+        """
 
-		plt.plot([0, 1], [0, 1], 'k--')			
-		plt.axis([-0.01, 1, 0, 1])
-		plt.title("ROC Curve")
-		plt.xlabel("Specificity")
-		plt.ylabel("Sensitivity")
+        for key, value in roc.items():
+            plt.plot(value[0], value[1], label=f"{key} - AUC({value[2]})")
 
-		plt.legend()
-		plt.show()
+        plt.plot([0, 1], [0, 1], "k--")
+        plt.axis([-0.01, 1, 0, 1])
+        plt.title("ROC Curve")
+        plt.xlabel("Specificity")
+        plt.ylabel("Sensitivity")
 
+        plt.legend()
+        plt.show()
